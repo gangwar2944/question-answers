@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import styled from "styled-components";
+import { useForm } from "react-hook-form";
 import TextField from "@mui/material/TextField";
 import { Button, Grid, MenuItem } from "@mui/material";
 import { createQuestion } from "../service";
@@ -13,9 +14,11 @@ const MainContainer = styled.div`
   align-items: center;
   flex-direction: column;
 `;
+
 const ButtonContainer = styled.div`
   text-align: right;
 `;
+
 const InputContainer = styled.div`
   display: flex;
   flex-direction: column;
@@ -28,155 +31,134 @@ const InputContainer = styled.div`
   overflow-x: hidden;
   scrollbar-width: thin;
 `;
+
 function ContentSaverEdit(props) {
-  const [formData, setFormData] = useState({
+  const defaultValues = {
     javascriptCode: "",
     answerInput: "",
     question: "",
     type: "",
     language: "",
-  });
-  console.log(" data", props.data);
-  //   const [savedData, setSavedData] = useState([]);
-
-  useEffect(() => {
-    setFormData(props.data.data);
-  }, []);
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      [name]: value,
-    });
+    approches: [{ javascriptCode: "", answerInput: "" }],
   };
 
-  const handleSave = async () => {
-    // Combine JavaScript code and text
-    const content = { ...formData };
+  const { register, handleSubmit, setValue, reset } = useForm({
+    defaultValues,
+  });
 
-    createQuestion(content)
-      .then((res) => {
-        console.log(res);
-        toast.success("data edited successfully !", {
-          position: toast.POSITION.BOTTOM_RIGHT,
-        });
-      })
-      .catch((err) => console.log(err));
+  useEffect(() => {
+    if (props.data && props.data.data) {
+      reset({
+        ...props.data.data,
+        approches: props.data.data.approches || [
+          { javascriptCode: "", answerInput: "" }
+        ],
+      });
+    }
+  }, [props.data, reset]);
 
-    setFormData({
-      javascriptCode: "",
-      answerInput: "",
-      question: "",
-      type: "",
-      language: "",
-    });
-
-    props.onClose(false);
-    window.location.reload();
+  const onSubmit = async (formData) => {
+    try {
+      await createQuestion(formData);
+      toast.success("Data edited successfully!", {
+        position: toast.POSITION.BOTTOM_RIGHT,
+      });
+      reset(defaultValues);
+      props.onClose(false);
+      window.location.reload();
+    } catch (err) {
+      console.log(err);
+    }
   };
 
   return (
     <MainContainer>
       <InputContainer>
-        <Grid container width={"100%"}>
-          <Grid item lg={6}>
-            {" "}
-            <TextField
-              style={{ margin: "10px 0" }}
-              id="outlined-basic"
-              label="Select Lanugage"
-              variant="outlined"
-              name="language"
-              value={formData.language}
-              onChange={handleChange}
-              fullWidth
-              select
-            >
-               {languageArray.map((item) => (
-                <MenuItem key={item} value={item}>
-                  {item}
-                </MenuItem>
-              ))}
-            </TextField>
+        <form onSubmit={handleSubmit(onSubmit)}>
+          <Grid container spacing={2}>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                style={{ margin: "10px 0" }}
+                id="outlined-basic"
+                label="Select Language"
+                variant="outlined"
+                select
+                fullWidth
+                {...register("language")}
+              >
+                {languageArray.map((item) => (
+                  <MenuItem key={item} value={item}>
+                    {item}
+                  </MenuItem>
+                ))}
+              </TextField>
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                style={{ margin: "10px 0" }}
+                id="outlined-basic"
+                variant="outlined"
+                label="Question Type"
+                select
+                fullWidth
+                {...register("type")}
+              >
+                {questionType.map((item) => (
+                  <MenuItem key={item} value={item}>
+                    {item}
+                  </MenuItem>
+                ))}
+              </TextField>
+            </Grid>
           </Grid>
-          <Grid item lg={6}>
-            {" "}
-            <TextField
-              style={{ margin: "10px" }}
-              id="outlined-basic"
-              variant="outlined"
-              label="Question Type"
-              name="type"
-              onChange={handleChange}
-              select
-              value={formData.type}
-              fullWidth
-            >
-              {questionType.map((item) => (
-                <MenuItem key={item} value={item}>
-                  {item}
-                </MenuItem>
-              ))}
-            </TextField>
-          </Grid>
-        </Grid>
-        <Grid container fullWidth>
-          <TextField
-            style={{ margin: "10px 0" }}
-            id="outlined-basic"
-            label="Enter your question"
-            variant="outlined"
-            name="question"
-            value={formData.question}
-            onChange={handleChange}
-            fullWidth
-          />
-        </Grid>
-        <Grid
-          container
-          width={"100%"}
-          maxHeight={"200px"}
-          overflow={"auto"}
-          sx={{ overflowX: "hidden", scrollbarWidth: "thin" }}
-        >
-          <TextField
-            style={{ margin: "10px 0" }}
-            id="outlined-textarea"
-            label="answer"
-            placeholder="Type your answer here"
-            name="answerInput"
-            value={formData.answerInput}
-            onChange={handleChange}
-            multiline
-            fullWidth
-          />
-        </Grid>
-        <Grid
-          container
-          width={"100%"}
-          maxHeight={"600px"}
-          overflow={"auto"}
-          sx={{ overflowX: "hidden", scrollbarWidth: "thin" }}
-        >
-          <TextField
-            style={{ margin: "10px 0" }}
-            id="outlined-textarea"
-            label="code"
-            placeholder="write js code here"
-            name="javascriptCode"
-            value={formData.javascriptCode}
-            onChange={handleChange}
-            multiline
-            fullWidth
-          />
-        </Grid>
 
-        <ButtonContainer>
-          <Button variant="contained" onClick={handleSave}>
-            Save
-          </Button>
-        </ButtonContainer>
+          <Grid container spacing={2}>
+            <Grid item xs={12}>
+              <TextField
+                style={{ margin: "10px 0" }}
+                id="outlined-basic"
+                label="Enter your question"
+                variant="outlined"
+                fullWidth
+                {...register("question")}
+              />
+            </Grid>
+          </Grid>
+
+          <Grid container spacing={2}>
+            <Grid item xs={12}>
+              <TextField
+                style={{ margin: "10px 0" }}
+                id="outlined-textarea"
+                label="Answer"
+                placeholder="Type your answer here"
+                multiline
+                fullWidth
+                {...register("approches[0].answerInput")}
+              />
+            </Grid>
+          </Grid>
+
+          <Grid container spacing={2}>
+            <Grid item xs={12}>
+              <TextField
+                style={{ margin: "10px 0" }}
+                id="outlined-textarea"
+                label="Code"
+                placeholder="Write JS code here"
+                multiline
+                fullWidth
+                {...register("approches[0].javascriptCode")}
+              />
+            </Grid>
+          </Grid>
+
+          <ButtonContainer>
+            <Button type="submit" variant="contained">
+              Save
+            </Button>
+          </ButtonContainer>
+        </form>
       </InputContainer>
     </MainContainer>
   );

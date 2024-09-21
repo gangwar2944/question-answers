@@ -1,46 +1,41 @@
-// import { Container } from "@mui/material";
 import React, { useState } from "react";
 import styled from "styled-components";
-import Modal from "./Modal";
 import ContentSaverEdit from "./ContentSaverEdit";
-import ModeEditOutlineOutlinedIcon from '@mui/icons-material/ModeEditOutlineOutlined';
-import DeleteOutlineOutlinedIcon from '@mui/icons-material/DeleteOutlineOutlined';
+import EditNoteIcon from "@mui/icons-material/EditNote";
+import DeleteOutlineOutlinedIcon from "@mui/icons-material/DeleteOutlineOutlined";
 import { deleteQuestion } from "../service";
 import { toast } from "react-toastify";
+import { CustomiseModal } from "./CustomiseModal";
+import { ExpandMore } from "@mui/icons-material";
+import {
+  Accordion,
+  AccordionDetails,
+  AccordionSummary,
+  Box,
+  Typography,
+} from "@mui/material";
+import ContentSaver from "./ContentSaver";
 
-const Container = styled.div`
-`;
+const Container = styled.div``;
 const Wapper = styled.div`
-  background-color: #f2f2f2;
+  background-color: #ffffff;
   box-shadow: rgba(0, 0, 0, 0.16) 0px 1px 4px;
-  padding: 20px;
   border-radius: 10px;
-`;
-const HeadingH3 = styled.h3`
-  padding-top: 10px;
 `;
 const Paraghraph = styled.p`
   padding: 10px 0;
 `;
 const Pretag = styled.pre`
-  padding: 15px 25px;
-  background-color: #c5c4c4;
+  padding: 10px;
+  background-color: #f5f5f5;
   border-radius: 10px;
   text-wrap: wrap;
+  font-size: 12px;
 `;
 const Code = styled.code``;
-const Button = styled.button`
-  /* background-color: #0d83ea; */
-  /* color: #fff; */
-  outline: none;
-  border: 1px solid #0d83ea;
-  border-radius: 10px;
-  padding: 5px;
-  margin-right:10px ;
-  cursor: pointer;
-`;
+
 const QuesAndAns = (props) => {
-  const { javascriptCode, answerInput, question } = props.data;
+  const { approaches, question, id } = props.data;
   // console.log("props",javascriptCode,answerInput, question);
 
   const [isEditProductPage, setIsEditProductPage] = useState(false);
@@ -55,39 +50,68 @@ const QuesAndAns = (props) => {
     document.body.classList.remove("body-scroll-lock");
   };
 
-  const deleteItem = (data)=>{
+  const deleteItem = (data) => {
     deleteQuestion(data.id)
-    .then((res)=>{
-        console.log(res)
-        toast.success("Question Deleted successfully !",{
-            position: toast.POSITION.BOTTOM_RIGHT
-          });
-    }).catch((err)=>{
-        console.log(err)
-        toast.error("Something went wrong !",{
-            position: toast.POSITION.BOTTOM_RIGHT
-          });
-    });
-  }
+      .then((res) => {
+        console.log(res);
+        toast.success("Question Deleted successfully !", {
+          position: toast.POSITION.BOTTOM_RIGHT,
+        });
+      })
+      .catch((err) => {
+        console.log(err);
+        toast.error("Something went wrong !", {
+          position: toast.POSITION.BOTTOM_RIGHT,
+        });
+      });
+  };
 
   return (
-    <Container style={{ margin: "20px" }}>
+    <Container style={{ margin: "5px" }}>
       <Wapper>
-        <Button  onClick={openEditProductpage}><ModeEditOutlineOutlinedIcon/></Button>
-        <Button  onClick={()=>deleteItem(props.data)}><DeleteOutlineOutlinedIcon style={{color:"red"}}/></Button>
-        <Modal isOpen={isEditProductPage} onClose={closeEditProductModal}>
-          <ContentSaverEdit
-            data={props}
-            onClose={closeEditProductModal}
-          />
-        </Modal>
-        <HeadingH3>Question : {question}</HeadingH3>
-        <Paraghraph>
-          <b>Answer</b> : {answerInput}
-        </Paraghraph>
-        <Pretag>
-          <Code>{javascriptCode}</Code>
-        </Pretag>
+        <CustomiseModal
+          open={isEditProductPage}
+          onClose={closeEditProductModal}
+        >
+          {/* <ContentSaverEdit data={props} onClose={closeEditProductModal} /> */}
+          <ContentSaver data={props} onClose={closeEditProductModal} />
+        </CustomiseModal>
+        <Accordion>
+          <AccordionSummary
+            id="panel1-header"
+            aria-controls="panel1-content"
+            expandIcon={<ExpandMore />}
+          >
+            <Typography>
+              {" "}
+              Question {id}: {question}
+            </Typography>
+          </AccordionSummary>
+          <AccordionDetails>
+            {approaches.map((item) => (
+              <Box key={item.id}>
+                <Box>
+                  <EditNoteIcon
+                    onClick={openEditProductpage}
+                    sx={{ cursor: "pointer" }}
+                  />
+                  <DeleteOutlineOutlinedIcon
+                    sx={{ cursor: "pointer", color: "error.main" }}
+                    onClick={() => deleteItem(props.data)}
+                  />
+                </Box>
+                <Typography>
+                  <Paraghraph>
+                    <b>Answer</b> : {item.answerInput}
+                  </Paraghraph>
+                  <Pretag>
+                    <Code>{item.javascriptCode}</Code>
+                  </Pretag>
+                </Typography>
+              </Box>
+            ))}
+          </AccordionDetails>
+        </Accordion>
       </Wapper>
     </Container>
   );

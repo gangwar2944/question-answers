@@ -2,59 +2,53 @@ import React, { useEffect, useState } from "react";
 import styled from "styled-components";
 import QuesAndAns from "../components/QuesAndAns";
 import Navbar from "../components/Navbar";
-import {
-  Box,
-  Button,
-  CssBaseline,
-  MenuItem,
-  TextField,
-} from "@mui/material";
-import { getAllQuestions } from "../service";
-import AddOutlinedIcon from "@mui/icons-material/AddOutlined";
-import Modal from "../components/Modal";
-import ContentSaver, { languageArray, questionType } from "../components/ContentSaver";
-import { Search } from "@mui/icons-material";
+import { Box, CssBaseline, Grid } from "@mui/material";
+import { getAllQuestions, searchQuestions } from "../service";
+import ContentSaver from "../components/ContentSaver";
+import { CustomiseModal } from "../components/CustomiseModal";
+import FilterComponent from "./FilterComponent";
 
 const MainContainer = styled.div`
   background-color: #e3eaf2;
 `;
 
-const FilterContainer = styled(Box)`
-  width: 300px;
-  position: fixed;
-  top: 70px; /* Adjust top position to be below the fixed navbar */
-  left: 10px;
-  background-color: #fff;
-  height: 100vh;
-  padding: 5px;
-`;
-
 const ContentContainer = styled(Box)`
   flex-grow: 1;
-  margin-left: 320px; /* Adjust margin to make space for the fixed filter box */
+  margin-left: ${({ filterOpen }) => (filterOpen ? "320px" : "0px")};
+  transition: margin-left 0.3s;
 `;
 
 const Section = styled.section``;
 
 const HeadingH1 = styled.h1`
-  padding: 20px 20px 0 20px;
+  padding: 10px 10px 0 10px;
 `;
 
 const QuestionAnswerList = () => {
-  const [data, setData] = useState(null);
+  const [data, setData] = useState([]);
+  const [filteredData, setFilteredData] = useState([]);
+  const [filterOpen, setFilterOpen] = useState(false);
+  const [searchDto, setSearchDto] = useState({
+    language: "",
+    question: "",
+    type: "",
+  });
 
   useEffect(() => {
     getAllQuestions()
       .then((res) => {
-        console.log("res", res);
         setData(res);
       })
       .catch((err) => console.log(err));
   }, []);
 
+  useEffect(() => {
+    filterData();
+  }, [searchDto]);
+
   const [isEditProductPage, setIsEditProductPage] = useState(false);
 
-  const openEditProductpage = () => {
+  const openEditProductPage = () => {
     setIsEditProductPage(true);
     document.body.classList.add("body-scroll-lock");
   };
@@ -64,81 +58,65 @@ const QuestionAnswerList = () => {
     document.body.classList.remove("body-scroll-lock");
   };
 
+  const handleSearch = (e) => {
+    const { name, value } = e.target;
+    setSearchDto((prevSearchDto) => ({
+      ...prevSearchDto,
+      [name]: value,
+    }));
+  };
+
+  const filterData = async () => {
+    try {
+      const result = await searchQuestions(searchDto);
+      setFilteredData(result);
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  const resetFields = () => {
+    setSearchDto({
+      language: "",
+      question: "",
+      type: "",
+    });
+  };
+
+  const toggleFilterOpen = () => {
+    setFilterOpen(!filterOpen);
+  };
+
   return (
     <MainContainer>
       <CssBaseline />
-      <Navbar />
-      <Box display="flex">
-        <FilterContainer>
-          <Box width={"100%"}>
-            <Button
-              variant="contained"
-              onClick={openEditProductpage}
-              style={{ marginTop: "10px" }}
-              startIcon={<AddOutlinedIcon />}
-            >
-              Add New Question
-            </Button>
-          </Box>
-          <Box width={"100%"} mt={2}>
-            <TextField
-              variant="standard"
-              label="Select Language Filter"
-              fullWidth
-              select
-            >
-              {languageArray.map((item) => (
-                <MenuItem key={item} value={item}>
-                  {item}
-                </MenuItem>
-              ))}
-            </TextField>
-          </Box>
-          <Box width={"100%"} mt={2}>
-            <TextField
-              variant="standard"
-              label="Select Question Type Filter"
-              fullWidth
-              select
-            >
-              {questionType.map((item) => (
-                <MenuItem key={item} value={item}>
-                  {item}
-                </MenuItem>
-              ))}
-            </TextField>
-          </Box>
-          <Box width={"100%"} mt={2}>
-            <TextField
-              variant="standard"
-              label="Select Question"
-              fullWidth
-              select
-            >
-              {["Q1", "Q2", "Q3"].map((item) => (
-                <MenuItem key={item} value={item}>
-                  {item}
-                </MenuItem>
-              ))}
-            </TextField>
-          </Box>
-          <Box width={"100%"} mt={2}>
-            <Button variant="contained" startIcon={<Search />}>
-              Search
-            </Button>
-          </Box>
-        </FilterContainer>
-        <ContentContainer>
+      <Navbar filterClose={toggleFilterOpen} />
+      <Box display="flex" marginTop={"60px"}>
+        <FilterComponent
+          filterOpen={filterOpen}
+          searchDto={searchDto}
+          data={data}
+          handleSearch={handleSearch}
+          openEditProductPage={openEditProductPage}
+          filterData={filterData}
+          resetFields={resetFields}
+        />
+        <ContentContainer filterOpen={filterOpen}>
           <Section>
-            <HeadingH1>List Of All Questions And Answer</HeadingH1>
-            {data &&
-              data.map((data, index) => <QuesAndAns data={data} key={index} />)}
+            <HeadingH1>List Of All Questions And Answers</HeadingH1>  
+            <Grid container>
+              {filteredData.map((data) => (
+                <Grid item key={data.id} lg={6} xs={12}>
+                  <QuesAndAns data={data} />
+                </Grid>
+              ))}
+            </Grid>
           </Section>
         </ContentContainer>
       </Box>
-      <Modal isOpen={isEditProductPage} onClose={closeEditProductModal}>
+      <CustomiseModal open={isEditProductPage} onClose={closeEditProductModal}>
         <ContentSaver onClose={closeEditProductModal} />
-      </Modal>
+      </CustomiseModal>
     </MainContainer>
   );
 };

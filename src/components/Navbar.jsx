@@ -1,3 +1,5 @@
+import { Menu } from '@mui/icons-material';
+import { Box, Typography } from '@mui/material';
 import React from 'react';
 import styled from 'styled-components';
 
@@ -6,29 +8,36 @@ const MainContainer = styled.div`
   height: 60px;
   box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
   display: grid;
-  grid-template-columns: 2fr 10fr; /* Define 2 columns with the specified fractions */
-  grid-template-areas: "logo otherContent"; /* Define the grid areas */
+  grid-template-columns: 2fr 10fr;
+  grid-template-areas: "logo otherContent";
   position: fixed;
+  top: 0;
+  background-color: #fff;
+  z-index: 10;
 `;
 
 const Logo = styled.div`
-  background-color: #fff;
   display: flex;
-  justify-content: center;
   align-items: center;
-  grid-area: logo; /* Assign the "logo" grid area */
+  grid-area: logo;
+  width: 300px;
+  justify-content: flex-start;
+  gap: 10px;
+  padding: 15px;
 `;
 
 const OtherContent = styled.div`
-  background-color: #63717e;
-  grid-area: otherContent; /* Assign the "otherContent" grid area */
+  grid-area: otherContent;
 `;
 
-const Navbar = ({ toggleDrawer }) => {
+const Navbar = ({ filterClose = () => {} }) => {
   return (
     <MainContainer>
       <Logo>
-        logo
+        <Box>
+          <Menu onClick={filterClose} sx={{cursor:"pointer"}}/>
+        </Box>
+        <Typography>Filter</Typography>
       </Logo>
       <OtherContent />
     </MainContainer>
